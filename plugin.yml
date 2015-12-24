@@ -1,13 +1,11 @@
 name: MysteryCrates
 main: crates\Main
 version: 1.0
-api: [1.12.0]
+api: [1.12.0, 1.13.0]
 load: STARTUP
-author: EnderBrine101
+authors: [Primus, EnderBrine101]
 description: Adds crates and cratekeys to your server which give random rewards!
-commands:
-   cratekey:
-      description: Main command for this plugin
+
 permissions:
    mysterycrates.*:
       default: op
