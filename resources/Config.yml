@@ -1,6 +1,12 @@
 #CrateKeys Main Configuration File
-#Copyright (C) 2015 LazerSoft (by EnderBrine101)
+# by EnderBrine101 and Primus
 #All Rights Reserved
+
+# Popup settings
+# Send popup while holding crate key item?
+send-popup: true;
+# What will be the popup?
+popup: "Crate Key"
 
 #What should the item id for the cratekey be? It MUSY be an id and not a name.
 cratekey-item: 278
