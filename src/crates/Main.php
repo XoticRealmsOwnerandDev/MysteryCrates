@@ -2,64 +2,96 @@
 namespace crates;
 
 use pocketmine\plugin\PluginBase;
-use pocketmine\plugin\Plugin;
-use pocketmine\command\CommandSender;
-use pocketmine\command\Command;
 use pocketmine\utils\Config;
 use pocketmine\item\Item;
 use pocketmine\Player;
-use pocketmine\event\Listener;
-use pocketmine\event\player\PlayerInteractEvent;
-use pocketmine\event\player\PlayerJoinEvent;
+use pocketmine\inventory\Inventory;
 
-use crates\CratekeyCommand;
+use crates\command\Crate;
+use crates\handler\EventListener;
 
-class Main extends PluginBase implements Listener{
+class MysteryCrates extends PluginBase {
 
 	public $plugin, $votereward;
 	
 	public function onEnable(){
 		$this->saveDefaultConfig();
 		$this->cratekey = new CratekeyCommand($this);
-		$this->getServer()->getPluginManager()->registerEvents($this, $this);
-	//	$this->votereward = $this->getServer()->getPluginManager()->getPlugin("VoteReward");
-	}
-	
-	public function onCommand(CommandSender $sender, Command $cmd, $label, array $args){
-		$this->cratekey->onCommand($sender, $cmd, $label, $args);
-	}
-	
-	public function onTouchCrate(PlayerInteractEvent $e){
-		if($e->getBlock()->getId() == 54){
-			if($e->getItem()->getId() == $this->getConfig()->get("cratekey-item")){
-				if($e->getPlayer()->hasPermission("mysterycrates.crates.open")){
-					$e->setCancelled();
-					$this->openCrate($e->getPlayer());
-				}
-			}
+		$this->getServer()->getPluginManager()->registerEvents(new EventListener($this), $this);
+		$this->votereward = $this->getServer()->getPluginManager()->getPlugin("VoteReward");
+		
+		if(!$this->votereward instanceof PluginBase and !$this->votereward->isEnabled()){
+			$this->getLogger()->notice("VoteReward not found! Running without it.");
+			// No need to reset $this->votereward, its already null
+		} else {
+			$this->getLogger()->info(TextFormat::GREEN."VoteReward".TextFormat::WHITE." loaded!");
 		}
+		
+		$this->registerCommands();
+	}
+	
+	public function registerCommands(){
+		$commandMap = $this->getServer()->getCommandMap();
+		
+		$commandMap->register("MysteryCrates", new Crate($this));
 	}
 	
 	////////////////////////////////////////////////////////
 	
-	public function giveCratekeyAll(){
-		foreach($this->getServer()->getOnlinePlayers() as $p){
-			$p->getInventory()->addItem(Item::get($this->getConfig()->get("cratekey-item"), 0, 1));
+	/**
+	 * Gives everyone or given array of players an crate key!
+	 * 
+	 * @param bool $checkperm = true
+	 * @param Player[] $targets
+	 */
+	public function giveCratekeyAll($checkperm = true, $targets = []){
+		if(empty($targets)) $targets = $this->getServer()->getOnlinePlayers();
+		
+		foreach($targets as $p){
+			if(!$p instanceof Player) continue;
+			if(!$checkperm){
+				$p->getInventory()->addItem(Item::get($this->getConfig()->get("cratekey-item"), 0, 1));
+			} else {
+				if($p->hasPermission('mysterycrates.crates.get')) $p->getInventory()->addItem(Item::get(Item::get($this->getConfig()->get('cratekey-item'), 0, 1)));	
+			}
 		}
 	}
 	
-	public function openCrate(Player $p){
-		if($this->getConfig()->get("broadcast-message-on-open")){
-			$this->getServer()->broadcastMessage(TextFormat::BOLD. TextFormat::GREEN. "[MysteryCrates] ". TextFormat::RESET. TextFormat::RED. $p->getName(). " opened a crate!");
-			//TODO
-		}
+	/**
+	 * @param Player $p
+	 * @return bool
+	 */
+	public function openCrate(Player $p, Inventory $inventory){
+		if($this->getConfig()->get("broadcast-message-on-open")) $this->getServer()->broadcastMessage(TextFormat::BOLD. TextFormat::GREEN. "[MysteryCrates] ". TextFormat::RESET. TextFormat::RED. $p->getName(). " opened a crate!");
+		
 	}
 	
+	
+	/**
+	 * @param Player $p
+	 * @return array|null
+	 */
 	public function giveCrateKey(Player $p){
-		$p->getInventory()->addItem(Item::get($this->getConfig()->get("cratekey-item"), 0, 1));
+		return $p->getInventory()->addItem(Item::get($this->getConfig()->get("cratekey-item"), 0, 1));
 	}
 	
+	/**
+	 * RandomAltThingy complete this i dont know whacha thinkin about!
+	 * 
+	 */
 	public function onVote(){
 		//TODO
 	}
+	
+	/**
+	 * 
+	 * @param int $chance
+	 * @return bool
+	 */
+	public function isLucky($chance){
+		if(!is_numeric($chance)) return;
+		if($chance < 1) return false;
+		if($chance === mt_rand(1, $chance)) return true;
+	}
+	
 }
