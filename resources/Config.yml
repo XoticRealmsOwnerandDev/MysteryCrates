@@ -8,7 +8,7 @@ send-popup: true;
 # What will be the popup?
 popup: "Crate Key"
 
-#What should the item id for the cratekey be? It MUSY be an id and not a name.
+#What should the item id for the cratekey be? It MUST be an id and not a name.
 cratekey-item: 278
 
 #Should we broadcast a message to the server when someone opens a crate?
